@@ -1,7 +1,8 @@
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
-import { createLanguageModel, processRequests, createProgramTranslator, evaluateJsonProgram, getData } from "typechat";
+import { createLanguageModel, processRequests, getData } from "typechat";
+import { createProgramTranslator, createModuleTextFromProgram, evaluateJsonProgram } from "typechat/ts";
 
 // TODO: use local .env file.
 dotenv.config({ path: path.join(__dirname, "../../../.env") });
@@ -11,14 +12,14 @@ const schema = fs.readFileSync(path.join(__dirname, "mathSchema.ts"), "utf8");
 const translator = createProgramTranslator(model, schema);
 
 // Process requests interactively or from the input file specified on the command line
-processRequests("➕➖✖️➗🟰> ", process.argv[2], async (request) => {
+processRequests("🧮 > ", process.argv[2], async (request) => {
     const response = await translator.translate(request);
     if (!response.success) {
         console.log(response.message);
         return;
     }
     const program = response.data;
-    console.log(getData(translator.validator.createModuleTextFromJson(program)));
+    console.log(getData(createModuleTextFromProgram(program)));
     console.log("Running program:");
     const result = await evaluateJsonProgram(program, handleCall);
     console.log(`Result: ${typeof result === "number" ? result : "Error"}`);
